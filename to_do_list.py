@@ -42,6 +42,12 @@ def refresh_listbox():
             listbox.insert(tk.END, f'✅ {i['text']}')
         else: 
             listbox.insert(tk.END, i['text'])
+    update_count()
+
+def update_count():
+    total = len(tasks)
+    completed = sum(i['done'] for i in tasks)
+    count_releble.config(text = f'всего: {total} | выпонено: {completed} ')
 
 def task_done():
     selected = listbox.curselection()
@@ -54,6 +60,8 @@ def task_done():
 def task_del():
     selected = listbox.curselection()
     if not selected: return
+    answer = messagebox.askyesno('ПОТВЕРЖДЕНИЕ', 'ВЫ ТОЧНО ХОТИТЕ УДАЛИТЬ ЗАДАЧУ?')
+    if not answer: return
     index = selected[0]
     tasks.pop(index)
     save_task()
@@ -82,6 +90,9 @@ scrollbar.config(command = listbox.yview)
 
 bot_frame = tk.Frame(root)
 bot_frame.pack(padx = 10, pady = 10)
+
+count_releble = tk.Label(root, text = '')
+count_releble.pack(pady = (0, 10))
 
 done_btn = tk.Button(bot_frame, text = 'сделано', width = 15, height = 2, font = ('Arial', 15), command = task_done)
 done_btn.pack(padx = 5, side = tk.LEFT)
