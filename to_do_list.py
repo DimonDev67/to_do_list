@@ -2,13 +2,22 @@ import tkinter as tk
 from tkinter import messagebox
 import json
 import os
+import logging
 
 TASKS_FILE = 'tasks.json'
 
+logging.basicConfig(
+    filename = 'to_do.log',
+    encoding = 'utf-8',
+    level = logging.INFO,
+    format = '%(asctime)s - %(levelname)s - %(message)s'
+)
 
 root = tk.Tk()
 root.title('Список задач')
 root.geometry('400x400')
+
+logging.info('ПРИЛОЖЕНИЕ ЗАПУЩЕНО')
 
 # функции для работы с задачами
 
@@ -21,6 +30,7 @@ def add_task():
         'text': text,
         'done': False
     })
+    logging.info(f'ДОБАВЛЕНА ЗАДАЧА:{text}')
     entry.delete(0, tk.END)
     save_task()
     refresh_listbox()
@@ -54,6 +64,7 @@ def task_done():
     if not selected: return
     index = selected[0]
     tasks[index]['done'] = True
+    logging.info(f'ЗАДАЧА ВЫПОЛНЕНА: {tasks[index]['done']}')
     save_task()
     refresh_listbox()
 
@@ -64,8 +75,35 @@ def task_del():
     if not answer: return
     index = selected[0]
     tasks.pop(index)
+    logging.info('ЗАДАЧА УДАЛЕНА')
     save_task()
     refresh_listbox()
+
+def edit_task(event):
+    selected = listbox.curselection()
+    if not selected: return
+    index = selected[0]
+    win_edit = tk.Toplevel(root)
+    win_edit.title('Редактировать задачу')
+    win_edit.geometry('300x150')
+
+    new_entry = tk.Entry(win_edit, width = 42)
+    new_entry.pack(padx = 10, pady = 10)
+    new_entry.insert(0, tasks[index]['text'])
+    new_entry.focus()
+
+    def save_new_task():
+        new_text = new_entry.get().strip()
+        if not new_text:
+            messagebox.showwarning('ОШИБКА!', 'ВВЕДИ ТЕКСТ ЗАДАЧИ!')
+            return
+        tasks[index]['text'] = new_text
+        save_task()
+        refresh_listbox()
+        win_edit.destroy()
+    
+    save_btn = tk.Button(win_edit, text = 'СОХРАНИТЬ', command = save_new_task)
+    save_btn.pack(pady = 7)
 
 top_frame = tk.Frame(root)
 top_frame.pack(pady = 10, padx = 10, fill = tk.X)
@@ -84,6 +122,8 @@ scrollbar.pack(fill = tk.Y, side = tk.RIGHT)
 
 listbox = tk.Listbox(mid_frame, selectmode = tk.SINGLE)
 listbox.pack(fill = tk.BOTH, side = tk.LEFT, expand = True)
+
+listbox.bind('<Double-Button-1>', edit_task)
 
 scrollbar.config(command = listbox.yview)
 
